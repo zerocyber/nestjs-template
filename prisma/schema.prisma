@@ -6,6 +6,7 @@
 
 generator client {
   provider = "prisma-client-js"
+  // previewFeatures = ["prismaSchemaFolder"] // 폴더 구조의 프리즈마 스키마 파일 적용하기 위한 설정
 }
 
 datasource db {

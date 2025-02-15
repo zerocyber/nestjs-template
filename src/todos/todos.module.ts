@@ -6,5 +6,6 @@ import { PrismaService } from 'src/prisma.service';
 @Module({
   controllers: [TodosController],
   providers: [TodosService, PrismaService],
+  exports: [TodosService],
 })
 export class TodosModule {}

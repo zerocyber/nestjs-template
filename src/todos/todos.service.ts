@@ -7,7 +7,7 @@ import { Todo } from '@prisma/client';
 
 @Injectable()
 export class TodosService {
-  constructor(private prismaService: PrismaService) {}
+  constructor(private readonly prismaService: PrismaService) {}
 
   async create(createTodoDto: CreateTodoDto): Promise<Todo> {
     console.log('createTodoDto info', createTodoDto);
