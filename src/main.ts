@@ -20,6 +20,9 @@ async function bootstrap() {
     //   },
     }),
   );
+
+  app.setGlobalPrefix('api'); // 모든 요청은 api 프리픽스를 붙여야 함
+
   await app.listen(process.env.PORT ?? 3000);
 }
 
