@@ -1,4 +1,4 @@
-import { IsBoolean, IsString, MaxLength, MinLength } from 'class-validator';
+import { IsBoolean, IsNumber, IsString, MaxLength, MinLength } from 'class-validator';
 
 export class CreateTodoDto {
   @IsString({
@@ -27,4 +27,7 @@ export class CreateTodoDto {
     message: '완료 여부는 true/false만 가능합니다. - $value',
   })
   isDone: boolean;
+
+  @IsNumber()
+  userId: number;
 }
