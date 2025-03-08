@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
+// import { LoggingInterceptor } from './interceptors/logging.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -23,7 +24,10 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api'); // 모든 요청은 api 프리픽스를 붙여야 함
 
-  await app.listen(process.env.PORT ?? 3000);
+  // app.useGlobalInterceptors(new LoggingInterceptor()); // 모든 요청에 대한 로깅 인터셉터 적용
+  // app.enableShutdownHooks();
+
+  await app.listen(process.env.PORT ?? 3080);
 }
 
 bootstrap();
