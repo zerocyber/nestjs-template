@@ -16,6 +16,11 @@ export class TodosService {
         title: createTodoDto.title,
         isDone: createTodoDto.isDone,
         memo: createTodoDto.memo,
+        user: {
+          connect: {
+            id: createTodoDto.userId, // CreateTodoDto에 userId 추가 필요
+          }
+        }
       },
     });
   }
@@ -44,8 +49,17 @@ export class TodosService {
   }
 
   async remove(id: number): Promise<Todo> {
-    return this.prismaService.todo.delete({
+    // 레코드를 삭제하는 방식
+    // return this.prismaService.todo.delete({
+    //   where: { id },
+    // });
+
+    // 삭제 여부 flag 업데이트 방식
+    return this.prismaService.todo.update({
       where: { id },
+      data: {
+        isDeleted: true,
+      },
     });
   }
 }
