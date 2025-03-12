@@ -3,9 +3,25 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/prisma.service';
 import { User, UserStatus } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserService {
+
+  private readonly testUsers = [
+    {
+      userId: 1,
+      username: 'john',
+      email: 'john@example.com',
+      password: '1111',
+    },
+    {
+      userId: 2,
+      username: 'maria',
+      email: 'maria@example.com',
+      password: '1234',
+    },
+  ];
 
   constructor(private readonly prismaService: PrismaService) {}
 
@@ -15,9 +31,13 @@ export class UserService {
       data: {
         name: createUserDto.name,
         email: createUserDto.email,
-        password: createUserDto.password,
+        password: await bcrypt.hash(createUserDto.password, 10),
       },
     });
+  }
+
+  async findOneByEmailFromTestUsers(email: string) {
+    return this.testUsers.find((user) => user.email === email);
   }
 
   async findAll(): Promise<User[]> {
@@ -26,9 +46,29 @@ export class UserService {
     });
   }
 
-  async findOne(id: number): Promise<User | null> {
+
+  // async findOne(id: number): Promise<User | null> {
+  async findOne(id: number): Promise<Partial<User> | null> {
     return await this.prismaService.user.findUnique({
-      where: { id, status: UserStatus.ACTIVE },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        createdAt: true,
+      },
+      where: { 
+        id, 
+        status: UserStatus.ACTIVE,
+      },
+    });
+  }
+
+  async findOneByEmail(email: string): Promise<User | null> {
+    return await this.prismaService.user.findFirst({
+      where: {
+        email,
+        status: UserStatus.ACTIVE,
+      },
     });
   }
 
