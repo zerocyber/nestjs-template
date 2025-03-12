@@ -20,7 +20,7 @@ model Todo {
   userId    Int      @map("user_id")
   title     String
   memo      String?
-  isDeleted    Boolean @default(false) @map("is_deleted")
+  isDeleted Boolean @default(false) @map("is_deleted")
   isDone    Boolean  @default(false) @map("is_done")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -38,7 +38,7 @@ model User {
   id        Int      @id @default(autoincrement())
   groupId   Int?     @map("group_id")
   name      String
-  email     String
+  email     String   @unique
   password  String
   status    UserStatus   @default(ACTIVE)
   group     UserGroup?   @relation(fields: [groupId], references: [id])
