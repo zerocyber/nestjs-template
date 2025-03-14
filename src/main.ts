@@ -4,10 +4,22 @@ import { ValidationPipe } from '@nestjs/common';
 import * as session from 'express-session';
 import * as passport from 'passport';
 import * as cookieParser from 'cookie-parser';
+import Redis from 'ioredis';
+import { RedisStore } from 'connect-redis';
 // import { LoggingInterceptor } from './interceptors/logging.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  // Redis 클라이언트 생성
+  const redisClient = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
+
+  // Redis 스토어 생성
+  const redisStore = new RedisStore({
+    client: redisClient,
+    prefix: 'business:', // Redis 키 접두사
+  });
+
   app.useGlobalPipes(new ValidationPipe({
     // 일반적으로 유용한 옵션들
     // 필요한 기능만 부분적으로 주석 해제 후 사용
@@ -27,8 +39,10 @@ async function bootstrap() {
 
   // CORS 설정
   app.enableCors({
-    // origin: 'http://localhost:3000', // 프론트엔드 주소
-    origin: true,
+    // 호출 허용 도메인 목록
+    origin: [
+      'http://localhost:3000',
+    ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     credentials: true, // 쿠키 전송을 위해 필수
   });
@@ -39,17 +53,17 @@ async function bootstrap() {
   // session 설정
   app.use(
     session({
-      // secret: process.env.SESSION_SECRET || 'DEFAULT_SECRET', // 세션 암호화 키 
-      secret: 'DEFAULT_SECRET', // 세션 암호화 키 
-      resave: false, // 세션 데이터 저장 여부
-      saveUninitialized: false, // 세션 데이터 저장 여부
-      name: 'connect.sid', // 세션 쿠키 이름 명시
+      store: redisStore, // Redis 스토어 사용
+      secret: process.env.SESSION_SECRET || 'DEFAULT_SECRET', // 세션 비밀키
+      resave: false, // 세션 데이터 변경 시 저장 여부
+      saveUninitialized: false, // 초기화되지 않은 세션 저장 여부
+      name: 'connect.sid', // 세션 쿠키 이름
       cookie: {
-        httpOnly: true, // 자바스크립트에서 쿠키 접근 방지
+        httpOnly: true,
         secure: process.env.NODE_ENV === 'production', // HTTPS 전용 쿠키
         maxAge: 1000 * 60 * 60 * 6, // 쿠키 유효기간: 6시간
-        // path: '/',
         // sameSite: 'lax',
+        // maxAge: 1000 * 60 * 60 * 24, // 24시간
       },
     }),
   );

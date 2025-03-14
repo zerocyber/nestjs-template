@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ConflictException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/prisma.service';
@@ -26,14 +26,23 @@ export class UserService {
   constructor(private readonly prismaService: PrismaService) {}
 
   async create(createUserDto: CreateUserDto) {
-    console.log('createUserDto info', createUserDto);
-    return await this.prismaService.user.create({
-      data: {
-        name: createUserDto.name,
-        email: createUserDto.email,
-        password: await bcrypt.hash(createUserDto.password, 10),
-      },
-    });
+    try {
+      const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+      return await this.prismaService.user.create({
+        data: {
+          name: createUserDto.name,
+          email: createUserDto.email,
+          password: hashedPassword,
+        },
+      });
+    } catch (error) {
+      if (error.code === 'P2002') {
+        console.log('error.code', error.code);
+        const field = error.meta?.target?.[0];
+        throw new ConflictException(`${field}가 이미 사용 중입니다.`);
+      }
+      throw error;
+    }
   }
 
   async findOneByEmailFromTestUsers(email: string) {
