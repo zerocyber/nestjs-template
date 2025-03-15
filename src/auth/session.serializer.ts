@@ -1,28 +1,46 @@
-import { PassportSerializer } from "@nestjs/passport";
-import { User } from "@prisma/client";
-import { UserService } from "src/user/user.service";
-import { Injectable } from "@nestjs/common";
-
+import { Inject, Injectable } from '@nestjs/common';
+import { PassportSerializer } from '@nestjs/passport';
+import Redis from 'ioredis';
+import { REDIS_CLIENT } from '../common/providers/redis.provider';
+import { UserService } from '../user/user.service';
+import { User } from '@prisma/client';
 
 @Injectable()
 export class SessionSerializer extends PassportSerializer {
-
-    constructor(private readonly userService: UserService) {
+    constructor(
+        private readonly userService: UserService, 
+        @Inject(REDIS_CLIENT) private readonly redis: Redis
+    ) {
         super();
     }
     
-    // 세션 저장에 사용 되는 메서드
-    serializeUser(user: User, done: (err: Error | null, user: any) => void) {
+    serializeUser(user: User, done: (err: any, id?: number) => void): void {
         done(null, user.id);
     }
 
-    // 세션에서 정보 조회에 사용되는 메서드
-    async deserializeUser(userId: number, done: (err: Error | null, payload: any) => void): Promise<any> {
-        const user = await this.userService.findOne(userId);
-        if (!user) {
-            return done(null, null);
+    async deserializeUser(userId: number, done: (err: any, user?: any) => void): Promise<void> {
+        try {
+            // 캐시에 조회된 유저 데이터가 리턴
+            const cacheUser = await this.redis.get(`user:${userId}`);
+            if (cacheUser) {
+                return done(null, JSON.parse(cacheUser));
+            }
+
+            // DB에서 유저 데이터 조회
+            const user = await this.userService.findOne(userId);
+            if (!user) {
+                return done(new Error('User not found'));
+            }
+
+            // 패스워드 데이터는 제거
+            const { password, ...userWithoutPassword } = user;
+
+            // 캐시에 유저 데이터 저장
+            await this.redis.set(`user:${userId}`, JSON.stringify(userWithoutPassword));
+
+            done(null, userWithoutPassword);
+        } catch (err) {
+            done(err);
         }
-        const { password, ...userWithoutPassword } = user;
-        done(null, userWithoutPassword);
     }
 }

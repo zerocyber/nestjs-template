@@ -4,15 +4,16 @@ import { ValidationPipe } from '@nestjs/common';
 import * as session from 'express-session';
 import * as passport from 'passport';
 import * as cookieParser from 'cookie-parser';
-import Redis from 'ioredis';
 import { RedisStore } from 'connect-redis';
+import { REDIS_CLIENT } from './common/providers/redis.provider';
+import Redis from 'ioredis';
 // import { LoggingInterceptor } from './interceptors/logging.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Redis 클라이언트 생성
-  const redisClient = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
+  // Redis 클라이언트 주입받기
+  const redisClient = app.get<Redis>(REDIS_CLIENT);
 
   // Redis 스토어 생성
   const redisStore = new RedisStore({
