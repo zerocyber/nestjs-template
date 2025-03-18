@@ -7,6 +7,7 @@ import * as cookieParser from 'cookie-parser';
 import { RedisStore } from 'connect-redis';
 import { REDIS_CLIENT } from './common/providers/redis.provider';
 import Redis from 'ioredis';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 // import { LoggingInterceptor } from './interceptors/logging.interceptor';
 
 async function bootstrap() {
@@ -75,6 +76,17 @@ async function bootstrap() {
 
   // app.useGlobalInterceptors(new LoggingInterceptor()); // 모든 요청에 대한 로깅 인터셉터 적용
   // app.enableShutdownHooks(); // 서버 종료 시 처리 할 hook 활성화
+
+  // Swagger 설정
+  const config = new DocumentBuilder()
+  .setTitle('Simple Todo List API')
+  .setDescription('The Simple Todo List API description')
+  .setVersion('1.0')
+  .addTag('todo')
+  .build();
+
+  const documentFactory = () => SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api', app, documentFactory);
 
   await app.listen(process.env.PORT ?? 3080);
 }
