@@ -6,6 +6,7 @@ import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { ConfigModule } from '@nestjs/config';
 import { LoggerMiddleware } from './common/middlewares/logging.middleware';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { LoggerMiddleware } from './common/middlewares/logging.middleware';
     TodosModule,
     AuthModule,
     UserModule,
+    EventEmitterModule.forRoot()
   ],
   controllers: [AppController],
   providers: [AppService],

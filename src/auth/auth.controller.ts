@@ -4,10 +4,11 @@ import { LocalAuthGuard } from './guards/local-auth.guard';
 import { AuthenticatedGuard } from './guards/authenticated.guard';
 import { Request as ExpressRequest, Response } from 'express';
 import { User } from '@prisma/client';
-import { interval, map, Observable } from 'rxjs';
+import { fromEvent, interval, map, Observable } from 'rxjs';
 import * as crypto from 'crypto';
 import Redis from 'ioredis';
 import { REDIS_CLIENT } from 'src/common/providers/redis.provider';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 interface RequestWithUser extends ExpressRequest {
   user: Partial<User>;
@@ -30,7 +31,8 @@ interface RequestWithUser extends ExpressRequest {
 export class AuthController {
   constructor(
     private readonly authService: AuthService, 
-    @Inject(REDIS_CLIENT) private readonly redis: Redis
+    @Inject(REDIS_CLIENT) private readonly redis: Redis,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   /**
@@ -120,18 +122,23 @@ export class AuthController {
   //   };
   // }
 
-  // @Post()
-  // async createUser(@Body() input: any): Promise<void> {
-  //   // this.client.emit('createUser', input);
-  //   // const num = Math.random();
-  //   // this.eventEmitter.emit('create-user', num);
-  // }
+  @Post('receive')
+  async addEvent(@Body() input: any): Promise<void> {
+    const num = Math.random();
+    this.eventEmitter.emit('receive-auth-data', num);
+  }
 
   @Sse('sse-login')
   sseLogin(): Observable<MessageEvent>  {
-    return interval(1000) // 1초마다 데이터 전송
+    // return interval(1000) // 1초마다 데이터 전송
+    // .pipe(
+    //   map((_) => ({ data: { hello: 'world' } }))
+    // );
+
+    return fromEvent(this.eventEmitter, 'receive-auth-data')
     .pipe(
-      map((_) => ({ data: { hello: 'world' } }))
+      map((data) => ({ data: { hello: 'world' } }))
     );
+
   }
 }
