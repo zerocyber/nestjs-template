@@ -122,22 +122,35 @@ export class AuthController {
   //   };
   // }
 
-  @Post('receive')
+  /**
+   * 인증이 완료되었을 때 호출되는 API
+   */
+  @Post('notify-auth-result')
   async addEvent(@Body() input: any): Promise<void> {
-    const num = Math.random();
-    this.eventEmitter.emit('receive-auth-data', num);
+    const userId = input.userId;
+    const loginKey = 'test-login-key';
+    
+    this.eventEmitter.emit('receive-auth-data', 
+      { userId, loginKey, status: 'SUCCESS' });
+
+    // 로그인 key 생성
   }
 
+  /**
+   * 클라이언트에서 sse 연결 요청 - 로그인 페이지
+   */
   @Sse('sse-login')
   sseLogin(): Observable<MessageEvent>  {
-    // return interval(1000) // 1초마다 데이터 전송
-    // .pipe(
-    //   map((_) => ({ data: { hello: 'world' } }))
-    // );
 
+    // TODO: timeout 설정
+    
     return fromEvent(this.eventEmitter, 'receive-auth-data')
     .pipe(
-      map((data) => ({ data: { hello: 'world' } }))
+      map((data: any) => ({ data: { 
+        userId: data.userId, 
+        loginKey: data.loginKey,
+        status: data.status,
+      } }))
     );
 
   }
