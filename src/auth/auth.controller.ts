@@ -9,6 +9,7 @@ import * as crypto from 'crypto';
 import Redis from 'ioredis';
 import { REDIS_CLIENT } from 'src/common/providers/redis.provider';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { ApiBody, ApiParam } from '@nestjs/swagger';
 
 interface RequestWithUser extends ExpressRequest {
   user: Partial<User>;
@@ -51,16 +52,6 @@ export class AuthController {
     return req.user;
   }
 
-  // /**
-  //  * JWT 로그인
-  //  */
-  // async jwtLogin() {
-  //   return {
-  //     message: 'JWT 로그인 성공',
-  //     status: 200,
-  //   };
-  // }
-
   @Post('/logout')
   @UseGuards(AuthenticatedGuard)
   @HttpCode(HttpStatus.OK)
@@ -78,7 +69,7 @@ export class AuthController {
     });
   }
 
-  // @Get('key')
+  // @Get('token')
   // async sseAuthKey(): Promise<Object> {
 
   //   // 1. 외부 API로부터 인증 데이터 받아오기
@@ -123,8 +114,16 @@ export class AuthController {
   // }
 
   /**
-   * 인증이 완료되었을 때 호출되는 API
+   * 인증이 완료 시 인증서버로부터 호출 되는 API
    */
+  @ApiBody({
+    schema: {
+      type: 'json',
+      example: {
+        userId: 1,
+      },
+    },
+  })
   @Post('notify-auth-result')
   async addEvent(@Body() input: any): Promise<void> {
     const userId = input.userId;
@@ -139,7 +138,7 @@ export class AuthController {
   /**
    * 클라이언트에서 sse 연결 요청 - 로그인 페이지
    */
-  @Sse('sse-login')
+  @Sse('sse')
   sseLogin(): Observable<MessageEvent>  {
 
     // TODO: timeout 설정
